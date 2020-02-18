@@ -90,27 +90,24 @@ class CharDecoder(nn.Module):
 
         batch_size = initialStates[0].shape[1]
 
-        decoded_words = [""] * batch_size
+        output_word = [''] * batch_size
         decoded_done = [False] * batch_size
 
         dec_hidden = initialStates
-        input_char = torch.tensor([[self.target_vocab.start_of_word] * batch_size], device=device)
+        current_char = torch.tensor([self.target_vocab.start_of_word] * batch_size, device=device).unsqueeze(0)
 
         for _ in range(max_length):
-            scores, dec_hidden = self.forward(input_char, dec_hidden)
-            input_char = scores.argmax(dim=2)
+            scores, dec_hidden = self.forward(current_char, dec_hidden)
+            current_char = scores.argmax(-1)
+            ind_char = current_char.detach().squeeze(0)
 
-            for idx, char_id in enumerate(input_char.detach().squeeze(0)):
-                if decoded_done[idx] is True:
-                    continue
-                if char_id == self.target_vocab.end_of_word:
-                    decoded_done[idx] = True
-                    if all(decoded_done):
-                        break
-                    continue
-                char = self.target_vocab.id2char[int(char_id)]
-                decoded_words[idx] += char
+            for idx, idx_char in enumerate(ind_char):
+                if not decoded_done[idx]:
+                    if idx_char == self.target_vocab.end_of_word:
+                        decoded_done[idx] = True
+                    else:
+                        output_word[idx] += self.target_vocab.id2char[int(idx_char)]
 
-        return decoded_words
+        return output_word
         ### END YOUR CODE
 
