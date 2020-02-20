@@ -21,7 +21,7 @@ class Highway(nn.Module):
     def forward(self, x_conv_out : torch.Tensor) -> torch.Tensor:
         x_proj = torch.relu(self.proj.forward(x_conv_out))
         x_gate = torch.sigmoid(self.gate.forward(x_conv_out))
-        x_highway = torch.mul(x_gate, x_proj) + torch.mul(1 - x_gate, x_proj)
+        x_highway = torch.mul(x_gate, x_proj) + torch.mul(1 - x_gate, x_conv_out)
 
         return x_highway
 
